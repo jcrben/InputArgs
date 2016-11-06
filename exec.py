@@ -53,6 +53,9 @@ class AsyncProcess(object):
         for k, v in proc_env.items():
             proc_env[k] = os.path.expandvars(v)
 
+        print('shell cmd')
+        print(shell_cmd)
+
         if shell_cmd and sys.platform == "win32":
             # Use shell=True on Windows, so shell_cmd is passed through with the correct escaping
             self.proc = subprocess.Popen(shell_cmd, stdout=subprocess.PIPE,
@@ -137,6 +140,9 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             word_wrap = True, syntax = "Packages/Text/Plain text.tmLanguage",
             # Catches "path" and "shell"
             **kwargs):
+
+        print('kwargs:`')
+        print(kwargs)
         self.sl = kwargs
         # clear the text_queue
         self.text_queue_lock.acquire()
@@ -182,10 +188,12 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
         # Call create_output_panel a second time after assigning the above
         # settings, so that it'll be picked up as a result buffer
 
+        # Note that this allows the Popen to run in the proper directory
         # Change to the working dir, rather than spawning the process with it,
         # so that emitted working dir relative path names make sense
         if working_dir != "":
             os.chdir(working_dir)
+
 
 
         self.window.show_input_panel("Input Args", "", functools.partial(self.fun, cmd, shell_cmd, merged_env), None, None)
@@ -193,21 +201,22 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
 
 
     def fun(self, cmd, shell_cmd, merged_env, ss):
-        # if int(sublime.version()) >= 3000:
-        #     self.window.create_output_panel("exec")
-        # else:
-        #     self.window.get_output_panel("exec")
-        # # self.window.create_output_panel("exec")
-        # # print("THIis" + str(ss))
-        # history.insert(ss)
-        # if shell_cmd:
-        #     shell_cmd += " " + str(ss)
-        # else:
-        #     cmd.append(str(ss))
+        shell_cmd='make ex1-1 && ./ex1-1'
+
+        if int(sublime.version()) >= 3000:
+            self.window.create_output_panel("exec")
+        else:
+            self.window.get_output_panel("exec")
+        # self.window.create_output_panel("exec")
+        # print("THIis" + str(ss))
+        history.insert(ss)
+        if shell_cmd:
+            shell_cmd += " " + str(ss)
+        else:
+            cmd.append(str(ss))
 
 
         self.debug_text = ""
-        shell_cmd='make ex1-1 && ./ex1-1'
         if shell_cmd:
             self.debug_text += "[shell_cmd: " + shell_cmd + "]\n"
         else:
@@ -241,10 +250,17 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
 
         try:
             # Forward kwargs to AsyncProcess
-            dir_plus_path = '/Users/MacbookRetina/code/c_systems/learn_c_the_hard_way/ex1-1.c'
+            dir_plus_path = str(os.getcwd())
+            print('printing dir_plus_path')
+            print(dir_plus_path)
+            sublime.status_message('hi in status message')
+            sublime.status_message(dir_plus_path)
+            dir_plus_path = '/Users/MacbookRetina/code/c_systems/learn_c_the_hard_way/ex1/ex1-1.c'
             print(json.dumps(self.sl))
-            print('hi')
-            self.proc = AsyncProcess(cmd, shell_cmd, merged_env, self, dir_plus_path)
+            print('shell_cmd:')
+            print(shell_cmd)
+            print('hi in print')
+            self.proc = AsyncProcess(cmd, shell_cmd, merged_env, self)
 
             self.text_queue_lock.acquire()
 
