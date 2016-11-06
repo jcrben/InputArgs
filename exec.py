@@ -124,7 +124,7 @@ class AsyncProcess(object):
                 self.proc.stderr.close()
                 break
 
-class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
+class InputArgsCommand(sublime_plugin.WindowCommand, ProcessListener):
     BLOCK_SIZE = 2**14
     text_queue = collections.deque()
     text_queue_proc = None
@@ -139,6 +139,8 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             **kwargs):
         self.sl = kwargs
         # clear the text_queue
+
+        # shell_cmd = ''.join(shell_cmd)
         self.text_queue_lock.acquire()
         self.truth = False
         try:
