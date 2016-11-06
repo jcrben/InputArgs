@@ -1,4 +1,3 @@
-import os, sys, re
 import sublime, sublime_plugin
 
 import threading
@@ -6,6 +5,7 @@ import subprocess
 import functools
 import time
 import collections
+import json
 from .hist import history1 as history
 
 class ProcessListener(object):
@@ -166,19 +166,19 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
                         and self.window.active_view().file_name()):
             working_dir = os.path.dirname(self.window.active_view().file_name())
 
-        self.output_view.settings().set("result_file_regex", file_regex)
-        self.output_view.settings().set("result_line_regex", line_regex)
-        self.output_view.settings().set("result_base_dir", working_dir)
-        self.output_view.settings().set("word_wrap", word_wrap)
-        self.output_view.settings().set("line_numbers", False)
-        self.output_view.settings().set("gutter", False)
-        self.output_view.settings().set("scroll_past_end", False)
+        # self.output_view.settings().set("result_file_regex", file_regex)
+        # self.output_view.settings().set("result_line_regex", line_regex)
+        # self.output_view.settings().set("result_base_dir", working_dir)
+        # self.output_view.settings().set("word_wrap", word_wrap)
+        # self.output_view.settings().set("line_numbers", False)
+        # self.output_view.settings().set("gutter", False)
+        # self.output_view.settings().set("scroll_past_end", False)
         if int(sublime.version()) >= 3000:
             self.output_view.assign_syntax(syntax)
         merged_env = env.copy()
         self.encoding = encoding
         self.quiet = quiet
-        
+
         # Call create_output_panel a second time after assigning the above
         # settings, so that it'll be picked up as a result buffer
 
@@ -188,25 +188,26 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             os.chdir(working_dir)
 
 
-        v = self.window.show_input_panel("Input Args", "", functools.partial(self.fun, cmd, shell_cmd, merged_env), None, None)
+        self.window.show_input_panel("Input Args", "", functools.partial(self.fun, cmd, shell_cmd, merged_env), None, None)
         v.settings().set('InputArgsInputPanel', True)
 
 
     def fun(self, cmd, shell_cmd, merged_env, ss):
-        if int(sublime.version()) >= 3000:
-            self.window.create_output_panel("exec")
-        else:
-            self.window.get_output_panel("exec")
-        # self.window.create_output_panel("exec")
-        # print("THIis" + str(ss))
-        history.insert(ss)
-        if shell_cmd:
-            shell_cmd += " " + str(ss)
-        else:
-            cmd.append(str(ss))
+        # if int(sublime.version()) >= 3000:
+        #     self.window.create_output_panel("exec")
+        # else:
+        #     self.window.get_output_panel("exec")
+        # # self.window.create_output_panel("exec")
+        # # print("THIis" + str(ss))
+        # history.insert(ss)
+        # if shell_cmd:
+        #     shell_cmd += " " + str(ss)
+        # else:
+        #     cmd.append(str(ss))
 
 
         self.debug_text = ""
+        shell_cmd='make ex1-1 && ./ex1-1'
         if shell_cmd:
             self.debug_text += "[shell_cmd: " + shell_cmd + "]\n"
         else:
@@ -220,7 +221,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
 
 
         self.proc = None
-        # print("BILLZ")
+        print("BILLZ")
         # print(cmd)
         if not self.quiet:
             if shell_cmd:
@@ -240,10 +241,13 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
 
         try:
             # Forward kwargs to AsyncProcess
-            
-            self.proc = AsyncProcess(cmd, shell_cmd, merged_env, self, self.sl)
-            
+            dir_plus_path = '/Users/MacbookRetina/code/c_systems/learn_c_the_hard_way/ex1-1.c'
+            print(json.dumps(self.sl))
+            print('hi')
+            self.proc = AsyncProcess(cmd, shell_cmd, merged_env, self, dir_plus_path)
+
             self.text_queue_lock.acquire()
+
             try:
                 self.text_queue_proc = self.proc
             finally:
@@ -254,7 +258,7 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
             self.append_string(None, self.debug_text + "\n")
             if not self.quiet:
                 self.append_string(None, "[Finished]")
-    
+
 
     def is_enabled(self, kill = False):
         if kill:
