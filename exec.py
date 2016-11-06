@@ -1,5 +1,5 @@
+import os, sys, re
 import sublime, sublime_plugin
-
 import threading
 import subprocess
 import functools
@@ -127,11 +127,13 @@ class AsyncProcess(object):
                 self.proc.stderr.close()
                 break
 
-class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
+class InputArgsCommand(sublime_plugin.WindowCommand, ProcessListener):
     BLOCK_SIZE = 2**14
     text_queue = collections.deque()
     text_queue_proc = None
     text_queue_lock = threading.Lock()
+
+    print('')
 
     proc = None
 
@@ -172,13 +174,13 @@ class ExecCommand(sublime_plugin.WindowCommand, ProcessListener):
                         and self.window.active_view().file_name()):
             working_dir = os.path.dirname(self.window.active_view().file_name())
 
-        # self.output_view.settings().set("result_file_regex", file_regex)
-        # self.output_view.settings().set("result_line_regex", line_regex)
-        # self.output_view.settings().set("result_base_dir", working_dir)
-        # self.output_view.settings().set("word_wrap", word_wrap)
-        # self.output_view.settings().set("line_numbers", False)
-        # self.output_view.settings().set("gutter", False)
-        # self.output_view.settings().set("scroll_past_end", False)
+        self.output_view.settings().set("result_file_regex", file_regex)
+        self.output_view.settings().set("result_line_regex", line_regex)
+        self.output_view.settings().set("result_base_dir", working_dir)
+        self.output_view.settings().set("word_wrap", word_wrap)
+        self.output_view.settings().set("line_numbers", False)
+        self.output_view.settings().set("gutter", False)
+        self.output_view.settings().set("scroll_past_end", False)
         if int(sublime.version()) >= 3000:
             self.output_view.assign_syntax(syntax)
         merged_env = env.copy()
